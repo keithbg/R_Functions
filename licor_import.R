@@ -12,9 +12,17 @@ if(batch== FALSE){
   licor.df <- read.table(filename, sep= "\t", fill= TRUE, header= TRUE, skip= 6)
 
 ## Remove appended data headers
-  append.row.num <- grep("Model", licor.df$DATAH)
-  if(length(append.row.num) > 0){
-  licor.df <- licor.df[-(append.row.num:(append.row.num + 5)), ]
+  if(length(grep("Model", licor.df$DATAH)) > 0){
+    remove_appended_header <- function(){
+      df <- licor.df[-grep("Model", licor.df$DATAH), ]
+      df <- df[-grep("Config", df$DATAH), ]
+      df <- df[-grep("Session", df$DATAH), ]
+      df <- df[-grep("Software", df$DATAH), ]
+      df <- df[-grep("Timestamp", df$DATAH), ]
+      df <- df[-grep("DATAH", df$DATAH), ]
+      return(df)
+    }
+    licor.df <- remove_appended_header()
   }
 
 ## Format columns
@@ -23,6 +31,7 @@ if(batch== FALSE){
                         Date= as.Date(Date, format= "%Y-%m-%d"),
                         RTime= strptime(Time, format= "%H:%M:%S"))
   licor.df[, 5:14] <- apply(licor.df[, 5:14], 2, function(x) as.numeric(as.character(x)))
+  licor.df$site <- as.factor(substring(filename, first=1, last= 2))
 
 return(licor.df)
 
